@@ -1,0 +1,41 @@
+Nginx UUID filter 
+--
+
+Description:
+--
+
+Issues identifying cookies. Based on ngx_http_userid_filter_module except that uses libuuid
+to generate random uuids AND encodes the ids in 32-bit hex format as opposed to base64 encoded.
+
+Installation:
+--
+
+You'll need to re-compile Nginx from source to include this module.
+Modify your compile of Nginx by adding the following directive
+(modified to suit your path of course):
+
+./configure --add-module=/absolute/path/to/nginx-uuid-filter
+make
+make install
+
+
+Usage:
+--
+
+Add to your Nginx config file's http block the following directives:
+
+    # Use UUID Module for cookie generation and tracking
+    uuid            on;
+    uuid_name       cookie_name;
+    uuid_domain     .example.com;
+    uuid_path       /;
+    uuid_expires    max;
+    uuid_p3p        'CP="NOI CUR ADM OUR NOR STA NID"';
+
+Contributing:
+--
+
+Git source repositories:
+http://github.com/eliast/nginx-uuid-filter/tree/master
+
+Please feel free to fork the project at GitHub and submit pull requests or patches.
