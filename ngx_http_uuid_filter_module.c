@@ -24,7 +24,7 @@ int uuid_verify(const char *in)
     int         i;
     const char  *cp;
 
-    if (strlen(in) != 32)
+    if (strlen(in) < 32)
         return -1;
 
     for (i=0, cp = in; i < 32; i++,cp++) {
@@ -292,7 +292,7 @@ ngx_http_uuid_set_variable(ngx_http_request_t *r,
 static ngx_http_uuid_ctx_t *
 ngx_http_uuid_get_uid(ngx_http_request_t *r, ngx_http_uuid_conf_t *conf)
 {
-    ngx_int_t                n, i, dst;
+    ngx_int_t                n;
     ngx_http_uuid_ctx_t   *ctx;
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_uuid_filter_module);
@@ -316,28 +316,16 @@ ngx_http_uuid_get_uid(ngx_http_request_t *r, ngx_http_uuid_conf_t *conf)
         return ctx;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "uid cookie: \"%V\"", &ctx->cookie);
 
-    u_char * p;
-    p = (u_char *) ctx->uid_got;
-    if(uuid_verify((char *) ctx->cookie.data) != -1) {
-       for (i = 0; i < 32; i += 2) {
-            dst = ngx_hextoi(&ctx->cookie.data[i], 2);
-            if (dst == NGX_ERROR || dst > 255) {
-                ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                                   "invalid value \"%V\"", &ctx->cookie);
-                return ctx;
-            }
-
-            *p++= (u_char) dst;
-        }
+    if(uuid_verify((char *) ctx->cookie.data) == -1) {
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "INVALID uid cookie: \"%V\"", &ctx->cookie);
+        ctx->uid_got[3] = 0;
+    } else {
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "valid uid cookie: \"%V\"", &ctx->cookie);
+        ctx->uid_got[3] = 1;
     }
-
-    ngx_log_debug4(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-               "uid: %08xd%08xd%08xd%08xd",
-               ctx->uid_got[0], ctx->uid_got[1],
-               ctx->uid_got[2], ctx->uid_got[3]);
 
     return ctx;
 }
